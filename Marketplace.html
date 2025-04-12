@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Model Marketplace</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+  <style>
+    body {
+      background: black;
+      padding: 2rem;
+      font-family: 'Segoe UI', sans-serif;
+      color: #fff;
+    }
+
+    h2, h4 {
+      color: #00bcd4;
+      font-weight: 600;
+      margin-bottom: 30px;
+      background-color: rgba(255, 255, 255, 0.1);
+      padding: 0.5rem 1rem;
+      border-radius: 10px;
+      display: inline-block;
+    }
+
+    .card {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      box-shadow: 0 6px 15px rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #00acc1, #26c6da);
+      border: none;
+      margin-bottom: 1rem;
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #0097a7, #00e5ff);
+    }
+
+    .btn-success {
+      background-color: #007bff;
+      border: none;
+      font-weight: bold;
+    }
+
+    .btn-success:hover {
+      background-color: #0056b3;
+    }
+
+    .loader {
+      text-align: center;
+      margin-top: 50px;
+      color: #fff;
+    }
+
+    .leader-box {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 1rem 2rem;
+      border-radius: 10px;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      display: inline-block;
+      color: #00e5ff;
+      font-size: 1.5rem;
+    }
+
+    .card h5, .card p {
+      font-size: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+  <h2> All Model Submissions</h2>
+  <div class="leader-box" id="leaderInfo"> Loading current leader...</div>
+  <br>
+  <button class="btn btn-primary" onclick="findLeader()"> Find Leader of the Week</button>
+  <div id="submissionContainer" class="mt-4"></div>
+  <div class="loader" id="loader">Loading submissions...</div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBzCe27A92YDm3Ej1rhVjIvdgn1r--jfwk",
+      authDomain: "de-ai-e458f.firebaseapp.com",
+      projectId: "de-ai-e458f",
+      storageBucket: "de-ai-e458f.appspot.com",
+      messagingSenderId: "3893098128",
+      appId: "1:3893098128:web:18d840613120965e7e4a15",
+      measurementId: "G-WBMQF0B5XZ"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const container = document.getElementById("submissionContainer");
+    const loader = document.getElementById("loader");
+    const leaderBox = document.getElementById("leaderInfo");
+    window.currentLeader = null;
+
+    async function loadApprovedSubmissions() {
+      try {
+        const querySnapshot = await db.collection("submissions").get();
+        loader.style.display = "none";
+        container.innerHTML = "";
+
+        if (querySnapshot.empty) {
+          container.innerHTML = `<p class="text-primary"> No submissions found.</p>`;
+          return;
+        }
+
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          const modelName = data.modelName || "Unnamed Model";
+          const contributor = data.contributor || "Unknown Contributor";
+          const url = data.url || "#";
+          const votes = data.votes || 0;
+          const price = data.price || 0;
+          const status = data.status || "Pending";
+          const walletAddress = data.walletAddress || "Not Provided";
+
+          const card = document.createElement("div");
+          card.className = "card mt-4 p-4";
+
+          let buyButton = "";
+          if (contributor === window.currentLeader) {
+            buyButton = `<button class="btn btn-success btn-sm mt-2" onclick="buyModel('${modelName}', '${contributor}', ${price}, '${walletAddress}')"> <strong>Buy This Model</strong></button>`;
+          }
+
+          card.innerHTML = `
+            <h5>Model Name: ${modelName}</h5>
+            <p><strong>Contributor:</strong> ${contributor}</p>
+            <p><strong>Wallet:</strong> ${walletAddress}</p>
+            <p><a href="${url}" target="_blank" class="text-info">🔗 View Dataset</a></p>
+            <p><strong>Votes:</strong> ${votes}</p>
+            <p><strong>Price:</strong> ${price} ETH</p>
+            <p><strong>Status:</strong> ${status}</p>
+            ${buyButton}
+          `;
+
+          container.appendChild(card);
+        });
+
+      } catch (error) {
+        console.error(" Error loading submissions:", error);
+        loader.innerHTML = `<p class='text-danger'>Error loading submissions.</p>`;
+      }
+    }
+
+    async function findLeader() {
+      try {
+        const snapshot = await db.collection("submissions").get();
+        const voteMap = new Map();
+
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          const contributor = data.contributor;
+          const votes = data.votes || 0;
+
+          if (contributor) {
+            voteMap.set(contributor, (voteMap.get(contributor) || 0) + votes);
+          }
+        });
+
+        if (voteMap.size === 0) {
+          alert("No valid submissions to evaluate.");
+          return;
+        }
+
+        let leader = "";
+        let maxVotes = -1;
+
+        voteMap.forEach((totalVotes, contributor) => {
+          if (totalVotes > maxVotes) {
+            maxVotes = totalVotes;
+            leader = contributor;
+          }
+        });
+
+        await db.collection("meta").doc("weeklyLeader").set({
+          leader: leader,
+          votes: maxVotes,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        window.currentLeader = leader;
+        leaderBox.innerHTML = ` <strong>Leader of the Week:</strong> ${leader} with ${maxVotes} votes`;
+        loadApprovedSubmissions();
+
+      } catch (error) {
+        console.error(" Error finding leader:", error);
+        alert("Error occurred while finding the leader.");
+      }
+    }
+
+    async function loadLeader() {
+      try {
+        const doc = await db.collection("meta").doc("weeklyLeader").get();
+        if (doc.exists) {
+          const data = doc.data();
+          window.currentLeader = data.leader;
+          leaderBox.innerHTML = ` <strong>Leader of the Week:</strong> ${data.leader} with ${data.votes} votes`;
+        } else {
+          leaderBox.innerHTML = ` No leader has been chosen yet.`;
+        }
+      } catch (error) {
+        console.error(" Error loading leader:", error);
+        leaderBox.innerHTML = ` Failed to load leader.`;
+      }
+    }
+
+    function buyModel(modelName, contributor, price, recipientWallet) {
+      localStorage.setItem('selectedModel', JSON.stringify({ modelName, contributor, price, recipientWallet }));
+      window.location.href = "buyModel.html";
+    }
+
+    // Load on page start
+    loadLeader().then(() => loadApprovedSubmissions());
+
+    // MetaMask Warning
+    window.addEventListener('DOMContentLoaded', () => {
+      if (typeof window.ethereum === 'undefined') {
+        const installPopup = document.createElement('div');
+        installPopup.innerHTML = `
+          <div style="
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #fff3cd;
+            border-left: 6px solid #ff9800;
+            color: #856404;
+            padding: 16px 20px;
+            border-radius: 8px;
+            font-family: 'Segoe UI', sans-serif;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            max-width: 300px;
+            z-index: 1000;">
+            <strong>MetaMask Not Detected</strong><br>
+            Please install <a href="https://metamask.io/download/" target="_blank" style="color: #ff6f00; text-decoration: underline;">MetaMask</a> to use Web3 features.
+          </div>`;
+        document.body.appendChild(installPopup);
+      }
+    });
+  </script>
+
+</body>
+</html>

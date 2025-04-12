@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>User Dashboard | DeAI-Net</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <style>
+    body {
+      background-color: #000000;
+      color: #ffffff;
+      min-height: 100vh;
+      padding: 2rem;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    .overlay {
+      background-color: rgba(255, 255, 255, 0.1);
+      padding: 2rem;
+      border-radius: 20px;
+    }
+
+    .navbar {
+      background-color: #282828;
+    }
+
+    .navbar-brand, .nav-link, .btn-outline-light {
+      color: #f0f0f0 !important;
+    }
+
+    .card {
+      background-color: #1a1a1a;
+      border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      border: 1px solid #4dd0e1;
+    }
+
+    .btn-dataset {
+      background: linear-gradient(135deg, #00acc1, #26c6da);
+      color: #ffffff;
+      transition: all 0.3s ease;
+    }
+
+    .btn-dataset:hover {
+      background: linear-gradient(135deg, #0097a7, #00e5ff);
+      transform: scale(1.02);
+    }
+
+    .btn-outline-primary {
+      border-color: #00bcd4;
+      color: #00bcd4;
+      transition: all 0.3s ease;
+    }
+
+    .btn-outline-primary:hover {
+      background-color: #00bcd4;
+      color: white;
+    }
+
+    h2 {
+      font-weight: 600;
+      color: #00bcd4;
+    }
+  </style>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg px-3">
+    <a class="navbar-brand" href="#">DeAI-Net</a>
+    <div class="ms-auto">
+      <span id="userEmail" class="me-3 text-white fw-semibold"></span>
+      <button class="btn btn-outline-light btn-sm" onclick="logout()">Logout</button>
+    </div>
+  </nav>
+
+  <!-- Dashboard -->
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-md-8">
+        <div class="overlay">
+          <div class="card p-5 text-center">
+            <h2>Welcome to Your Dashboard</h2>
+            <p class="mt-3 mb-4">Explore and purchase AI models or datasets from the community.</p>
+            <div class="d-grid gap-3">
+              <a href="marketplace.html" class="btn btn-dataset btn-lg"> Go to Marketplace</a>
+              <a href="my-purchases.html" class="btn btn-outline-primary btn-lg"> My Purchases</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase Logic -->
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBzCe27A92YDm3Ej1rhVjIvdgn1r--jfwk",
+      authDomain: "de-ai-e458f.firebaseapp.com",
+      projectId: "de-ai-e458f",
+      storageBucket: "de-ai-e458f.appspot.com",
+      messagingSenderId: "3893098128",
+      appId: "1:3893098128:web:18d840613120965e7e4a15",
+      measurementId: "G-WBMQF0B5XZ"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(() => {
+      auth.onAuthStateChanged(user => {
+        if (user) {
+          db.collection("users").where("email", "==", user.email).get().then(snapshot => {
+            if (!snapshot.empty) {
+              snapshot.forEach(doc => {
+                const userData = doc.data();
+                document.getElementById("userEmail").textContent = `Hi, ${userData.username}`;
+                db.collection("users").doc(doc.id).update({
+                  lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+                });
+              });
+            } else {
+              console.warn("No user document found for email:", user.email);
+            }
+          });
+        } else {
+          alert("Session expired. Redirecting to login...");
+          window.location.href = "login.html";
+        }
+      });
+    }).catch(error => {
+      console.error("Persistence error:", error);
+    });
+
+    function logout() {
+      auth.signOut().then(() => {
+        window.location.href = "index.html";
+      });
+    }
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DeAI-Net | Contributor Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', sans-serif;
+      background-color: #000000;
+      color: #f0f0f0;
+    }
+
+    .header {
+      background-color: rgba(30, 41, 59, 0.9);
+      color: #ffffff;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 26px;
+    }
+
+    .header a {
+      background-color: #ef5350;
+      color: white;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: background 0.3s ease;
+    }
+
+    .header a:hover {
+      background-color: #d32f2f;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center;
+    }
+
+    .card {
+      background-color: rgba(30, 30, 30, 0.88);
+      border-radius: 14px;
+      padding: 24px;
+      flex: 1 1 300px;
+      max-width: 350px;
+      color: #ffffff;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+      transition: transform 0.2s ease;
+    }
+
+    .card:hover {
+      transform: scale(1.03);
+    }
+
+    .card h5 {
+      margin-bottom: 10px;
+      color: #00e5ff;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .card p {
+      font-size: 15px;
+      color: #cccccc;
+    }
+
+    .card button {
+      margin-top: 15px;
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #00acc1, #26c6da);
+      color: #ffffff;
+      font-size: 15px;
+      font-weight: bold;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.2s;
+    }
+
+    .card button:hover {
+      background: linear-gradient(135deg, #0097a7, #00e5ff);
+      transform: scale(1.02);
+    }
+
+    @media (max-width: 768px) {
+      .row {
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1> Contributor Dashboard</h1>
+    <a href="index.html">Logout</a>
+  </div>
+
+  <div class="container">
+    <div class="row">
+      <div class="card">
+        <h5> Upload AI Models</h5>
+        <p>Submit your trained AI for community validation.</p>
+        <button onclick="window.location.href='upload-model.html'">Upload</button>
+      </div>
+
+      <div class="card">
+        <h5> Upload Dataset</h5>
+        <p>Contribute clean, unbiased datasets to the network.</p>
+        <button onclick="window.location.href='contribute-data.html'">Contribute</button>
+      </div>
+
+      <div class="card">
+        <h5> View Royalties</h5>
+        <p>Track NFT sales and royalty income via smart contracts.</p>
+        <button onclick="window.location.href='check-earnings.html'">Check Earnings</button>
+      </div>
+
+      <div class="card">
+        <h5> Review Submissions</h5>
+        <p>Explore and engage with community contributions.</p>
+        <button onclick="window.location.href='contributor review.html'">Review</button>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

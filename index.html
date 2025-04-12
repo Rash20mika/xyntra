@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Login / Signup | DeAI-Net</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+  body {
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #000;
+    background-size: cover;
+    color: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+  }
+
+  .form-container {
+    width: 100%;
+    max-width: 540px;
+    background: rgba(40, 40, 40, 0.95);
+    padding: 2.5rem;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  }
+
+  .form-title {
+    text-align: center;
+    font-size: 26px;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    color: #00e5ff;
+  }
+
+  .nav-tabs .nav-link {
+    border: none;
+    color: #00e5ff;
+    font-weight: 600;
+  }
+
+  .nav-tabs .nav-link.active {
+    background-color: #00bcd4;
+    color: white;
+    border-radius: 8px;
+  }
+
+  input, select {
+    border-radius: 10px !important;
+    font-size: 15px;
+    padding: 10px;
+  }
+
+  input:focus, select:focus {
+    box-shadow: 0 0 0 0.2rem rgba(0, 229, 255, 0.25);
+    border-color: #00e5ff;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #00acc1, #26c6da);
+    border: none;
+    transition: background 0.3s ease, transform 0.2s;
+  }
+
+  .btn-primary:hover {
+    background: linear-gradient(135deg, #0097a7, #00e5ff);
+    transform: scale(1.02);
+  }
+
+  .btn-success {
+    background: linear-gradient(135deg, #26a69a, #66bb6a);
+    border: none;
+    transition: background 0.3s ease, transform 0.2s;
+  }
+
+  .btn-success:hover {
+    background: linear-gradient(135deg, #1de9b6, #00c853);
+    transform: scale(1.02);
+  }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <div class="form-title">Login for De-AI</div>
+    <ul class="nav nav-tabs mb-3" id="authTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="login-tab" data-bs-toggle="tab" data-bs-target="#login" type="button">Login</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="signup-tab" data-bs-toggle="tab" data-bs-target="#signup" type="button">Signup</button>
+      </li>
+    </ul>
+
+    <div class="tab-content">
+      <!-- Login -->
+      <div class="tab-pane fade show active" id="login" role="tabpanel">
+        <input type="text" id="loginUsername" class="form-control mb-3" placeholder="Email or Username" />
+        <input type="password" id="loginPassword" class="form-control mb-3" placeholder="Password" />
+        <select id="loginRole" class="form-control mb-3">
+          <option value="">Select Role</option>
+          <option value="user">User</option>
+          <option value="contributor">Contributor</option>
+          <option value="admin">Admin</option>
+        </select>
+        <button onclick="handleLogin()" class="btn btn-primary w-100">Login</button>
+      </div>
+
+      <!-- Signup -->
+      <div class="tab-pane fade" id="signup" role="tabpanel">
+        <input type="text" id="signupUsername" class="form-control mb-3" placeholder="Username" />
+        <input type="email" id="signupEmail" class="form-control mb-3" placeholder="Email" />
+        <input type="password" id="signupPassword" class="form-control mb-3" placeholder="Password" />
+        <select id="signupRole" class="form-control mb-3">
+          <option value="">Select Role</option>
+          <option value="user">User</option>
+          <option value="contributor">Contributor</option>
+          <option value="admin">Admin</option>
+        </select>
+        <button onclick="handleSignup()" class="btn btn-success w-100">Signup</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { 
+      getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, 
+      setPersistence, browserLocalPersistence 
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import {
+      getFirestore, doc, setDoc, getDoc 
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBzCe27A92YDm3Ej1rhVjIvdgn1r--jfwk",
+      authDomain: "de-ai-e458f.firebaseapp.com",
+      projectId: "de-ai-e458f",
+      storageBucket: "de-ai-e458f.appspot.com",
+      messagingSenderId: "3893098128",
+      appId: "1:3893098128:web:18d840613120965e7e4a15",
+      measurementId: "G-WBMQF0B5XZ"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    window.handleSignup = async function () {
+      const username = document.getElementById("signupUsername").value.trim();
+      const email = document.getElementById("signupEmail").value.trim();
+      const password = document.getElementById("signupPassword").value.trim();
+      const role = document.getElementById("signupRole").value;
+
+      if (!username || !email || !password || !role) {
+        alert("Please fill all signup fields.");
+        return;
+      }
+
+      try {
+        const usernameRef = doc(db, "usernames", username);
+        const usernameSnap = await getDoc(usernameRef);
+        if (usernameSnap.exists()) {
+          alert("Username already taken.");
+          return;
+        }
+
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        await setDoc(doc(db, "users", user.uid), {
+          username,
+          email,
+          role
+        });
+
+        await setDoc(usernameRef, { uid: user.uid });
+
+        alert("Signup successful. Please login.");
+        const loginTab = new bootstrap.Tab(document.querySelector('#login-tab'));
+        loginTab.show();
+      } catch (error) {
+        console.error("Signup error:", error.message);
+        alert("Signup failed. " + error.message);
+      }
+    };
+
+    window.handleLogin = async function () {
+      const emailOrUsername = document.getElementById("loginUsername").value.trim();
+      const password = document.getElementById("loginPassword").value.trim();
+      const role = document.getElementById("loginRole").value;
+
+      if (!emailOrUsername || !password || !role) {
+        alert("Please fill all login fields.");
+        return;
+      }
+
+      try {
+        await setPersistence(auth, browserLocalPersistence);
+
+        let email = emailOrUsername;
+
+        if (!emailOrUsername.includes("@")) {
+          const usernameDoc = await getDoc(doc(db, "usernames", emailOrUsername));
+          if (!usernameDoc.exists()) {
+            alert("Username not found.");
+            return;
+          }
+
+          const uid = usernameDoc.data().uid;
+          const userDoc = await getDoc(doc(db, "users", uid));
+          if (!userDoc.exists()) {
+            alert("User data not found.");
+            return;
+          }
+
+          email = userDoc.data().email;
+        }
+
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        const userData = userDoc.data();
+
+        if (userData.role !== role) {
+          alert(`Incorrect role. You signed up as ${userData.role}.`);
+          return;
+        }
+
+        if (role === "user") window.location.href = "user-dashboard.html";
+        else if (role === "contributor") window.location.href = "contributor-dashboard.html";
+        else if (role === "admin") window.location.href = "admin-dashboard.html";
+
+      } catch (error) {
+        console.error("Login error:", error.message);
+        alert("Login failed: " + error.message);
+      }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
