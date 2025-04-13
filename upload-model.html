@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Submit Model (GitHub Link)</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+  <style>
+    body {
+      background-color: #000; /* Black background */
+      color: #f1f1f1;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 2rem;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: rgba(30, 30, 30, 0.95); /* Dark grey container */
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8);
+    }
+
+    h2 {
+      color: #00e5ff;
+      margin-bottom: 1.5rem;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    input[type="text"] {
+      background-color: #1c1c1c;
+      border: 1px solid #00acc1;
+      color: #ffffff;
+    }
+
+    input[type="text"]::placeholder {
+      color: #aaa;
+    }
+
+    .btn-submit {
+      background: linear-gradient(to right, #00acc1, #26c6da);
+      color: white;
+      border: none;
+    }
+
+    .btn-submit:hover {
+      background: linear-gradient(to right, #0097a7, #00e5ff);
+    }
+
+    .text-danger {
+      color: #f44336;
+    }
+
+    .text-success {
+      color: #4caf50;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Submit Model via GitHub Link</h2>
+
+    <input type="text" class="form-control mb-3" id="contributor" placeholder="Contributor Name">
+    <input type="text" class="form-control mb-3" id="modelName" placeholder="Model Name">
+    <input type="text" class="form-control mb-3" id="type" placeholder="Type (e.g., HTML, CSS, JS)">
+    <input type="text" class="form-control mb-3" id="githubLink" placeholder="GitHub File or Repo Link">
+    <input type="text" class="form-control mb-3" id="price" placeholder="Price in USD">
+    <input type="text" class="form-control mb-3" id="wallet" placeholder="Wallet Address (e.g., 0x...)">
+    <input type="text" class="form-control mb-3" id="imageUrl" placeholder="Image URL ">
+
+    <button class="btn btn-submit w-100" onclick="submitModel()">Submit</button>
+    <div id="message" class="mt-3 text-center"></div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBzCe27A92YDm3Ej1rhVjIvdgn1r--jfwk",
+      authDomain: "de-ai-e458f.firebaseapp.com",
+      projectId: "de-ai-e458f",
+      storageBucket: "de-ai-e458f.appspot.com",
+      messagingSenderId: "3893098128",
+      appId: "1:3893098128:web:18d840613120965e7e4a15",
+      measurementId: "G-WBMQF0B5XZ"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    function isValidEthAddress(address) {
+      return /^0x[a-fA-F0-9]{40}$/.test(address);
+    }
+
+    async function submitModel() {
+      const contributor = document.getElementById("contributor").value.trim();
+      const modelName = document.getElementById("modelName").value.trim();
+      const type = document.getElementById("type").value.trim();
+      const githubLink = document.getElementById("githubLink").value.trim();
+      const price = document.getElementById("price").value.trim();
+      const wallet = document.getElementById("wallet").value.trim();
+      const imageUrl = document.getElementById("imageUrl").value.trim();
+      const msg = document.getElementById("message");
+      msg.innerHTML = "";
+
+      if (!contributor || !modelName || !type || !githubLink || !price || !wallet) {
+        msg.innerHTML = `<span class="text-danger">Please fill all fields.</span>`;
+        return;
+      }
+
+      if (!isValidEthAddress(wallet)) {
+        msg.innerHTML = `<span class="text-danger">Invalid Ethereum wallet address.</span>`;
+        return;
+      }
+
+      try {
+        await db.collection("submissions").add({
+          contributor,
+          modelName,
+          type,
+          url: githubLink,
+          price: parseFloat(price),
+          walletAddress: wallet,
+          imageUrl: imageUrl || "",
+          status: "Pending",
+          leader: false,
+          votes: 0,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        msg.innerHTML = `<span class="text-success">Model submitted successfully for review.</span>`;
+        document.getElementById("contributor").value = "";
+        document.getElementById("modelName").value = "";
+        document.getElementById("type").value = "";
+        document.getElementById("githubLink").value = "";
+        document.getElementById("price").value = "";
+        document.getElementById("wallet").value = "";
+        document.getElementById("imageUrl").value = "";
+      } catch (error) {
+        msg.innerHTML = `<span class="text-danger">Error: ${error.message}</span>`;
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      if (typeof window.ethereum === 'undefined') {
+        const installPopup = document.createElement('div');
+        installPopup.innerHTML = `
+          <div style="
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #fff3cd;
+            border-left: 6px solid #ff9800;
+            color: #856404;
+            padding: 16px 20px;
+            border-radius: 8px;
+            font-family: 'Segoe UI', sans-serif;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            max-width: 300px;
+            z-index: 1000;">
+            <strong>MetaMask Not Detected</strong><br>
+            Please install <a href="https://metamask.io/download/" target="_blank" style="color: #ff6f00; text-decoration: underline;">MetaMask</a> to use Web3 features.
+          </div>
+        `;
+        document.body.appendChild(installPopup);
+      }
+    });
+  </script>
+</body>
+</html>

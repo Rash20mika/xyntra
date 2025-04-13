@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Royalties & Earnings</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #000000; /* Black background */
+      color: #f0f0f0;
+    }
+    .container {
+      max-width: 960px;
+      background: rgba(40, 40, 40, 0.95);
+      border-radius: 18px;
+      padding: 40px;
+      margin-top: 60px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+    }
+    h2 {
+      text-align: center;
+      color: #00bcd4;
+      margin-bottom: 30px;
+      font-size: 28px;
+    }
+    .form-control {
+      border: 1px solid #4dd0e1;
+      background-color: #f9f9f9;
+      color: #333;
+    }
+    .btn-purple {
+      background: linear-gradient(135deg, #00acc1, #26c6da);
+      color: #fff;
+      font-weight: bold;
+      border-radius: 10px;
+      border: none;
+      padding: 10px 20px;
+      transition: background 0.3s ease, transform 0.2s;
+    }
+    .btn-purple:hover {
+      background: linear-gradient(135deg, #0097a7, #00e5ff);
+      transform: scale(1.02);
+    }
+    .table thead {
+      background-color: #004d55;
+      color: #80deea;
+    }
+    th, td {
+      text-align: center;
+      vertical-align: middle;
+      color: #f0f0f0;
+    }
+    .summary {
+      font-weight: bold;
+      color: #80cbc4;
+      text-align: end;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>💰 Your Royalties & Earnings</h2>
+    <div class="mb-4 d-flex justify-content-center gap-3">
+      <input type="text" id="usernameInput" class="form-control w-50" placeholder="Enter your username">
+      <button class="btn btn-purple" onclick="fetchEarnings()">Check Status</button>
+    </div>
+
+    <table class="table table-striped" id="earningsTableWrapper">
+      <thead>
+        <tr>
+          <th>File Name</th>
+          <th>Type</th>
+          <th>Downloads</th>
+          <th>Earnings</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="earningsTable">
+        <tr><td colspan="5" class="text-center text-muted">Enter your username above and click "Check Status".</td></tr>
+      </tbody>
+    </table>
+
+    <div class="summary" id="totalEarnings"></div>
+
+    <div class="text-center mt-4">
+      <button class="btn btn-purple me-3" onclick="exportToCSV()">📄 Export to CSV</button>
+      <button class="btn btn-purple" onclick="exportToPDF()">📑 Export as PDF</button>
+    </div>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBzCe27A92YDm3Ej1rhVjIvdgn1r--jfwk",
+      authDomain: "de-ai-e458f.firebaseapp.com",
+      projectId: "de-ai-e458f",
+      storageBucket: "de-ai-e458f.appspot.com",
+      messagingSenderId: "3893098128",
+      appId: "1:3893098128:web:18d840613120965e7e4a15",
+      measurementId: "G-WBMQF0B5XZ"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    window.fetchEarnings = async () => {
+      const username = document.getElementById("usernameInput").value.trim();
+      const table = document.getElementById("earningsTable");
+      const totalEarningsDiv = document.getElementById("totalEarnings");
+      table.innerHTML = "";
+      totalEarningsDiv.textContent = "";
+
+      if (!username) {
+        alert("Please enter a username.");
+        return;
+      }
+
+      const usersRef = collection(db, "users");
+      const userQuery = query(usersRef, where("username", "==", username));
+      const userSnap = await getDocs(userQuery);
+
+      if (userSnap.empty) {
+        table.innerHTML = `<tr><td colspan="5" class="text-danger text-center">User not found.</td></tr>`;
+        return;
+      }
+
+      let userData;
+      userSnap.forEach((doc) => userData = doc.data());
+
+      if (userData.role !== "contributor") {
+        table.innerHTML = `<tr><td colspan="5" class="text-warning text-center">You are not a contributor.</td></tr>`;
+        return;
+      }
+
+      const submissionsRef = collection(db, "submissions");
+      const submissionQuery = query(submissionsRef, where("contributor", "==", username), where("status", "==", "Success"));
+      const submissionSnap = await getDocs(submissionQuery);
+
+      if (submissionSnap.empty) {
+        table.innerHTML = `<tr><td colspan="5" class="text-muted text-center">No successful submissions found.</td></tr>`;
+        return;
+      }
+
+      let total = 0;
+      let csvData = [["File Name", "Type", "Downloads", "Earnings", "Status"]];
+      let pdfData = [];
+
+      submissionSnap.forEach((doc) => {
+        const data = doc.data();
+        const downloads = data.downloads || 0;
+        const earnings = downloads * 50;
+        total += earnings;
+
+        const row = `
+          <tr>
+            <td>${data.modelName || "N/A"}</td>
+            <td>${data.type || "Model"}</td>
+            <td>${downloads}</td>
+            <td>₹${earnings}</td>
+            <td>${data.status}</td>
+          </tr>
+        `;
+        table.innerHTML += row;
+
+        csvData.push([
+          data.modelName || "N/A",
+          data.type || "Model",
+          downloads,
+          `₹${earnings}`,
+          data.status
+        ]);
+
+        pdfData.push([
+          data.modelName || "N/A",
+          data.type || "Model",
+          downloads.toString(),
+          `₹${earnings}`,
+          data.status
+        ]);
+      });
+
+      totalEarningsDiv.textContent = `Total Earnings: ₹${total}`;
+      window._csvData = csvData;
+      window._pdfData = pdfData;
+    };
+
+    window.exportToCSV = () => {
+      const csvData = window._csvData;
+      if (!csvData || csvData.length < 2) {
+        alert("No data to export.");
+        return;
+      }
+
+      let csvContent = "data:text/csv;charset=utf-8," + csvData.map(e => e.join(",")).join("\n");
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", "royalties_earnings.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    };
+
+    window.exportToPDF = () => {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      const tableData = window._pdfData;
+
+      if (!tableData || tableData.length === 0) {
+        alert("No data to export.");
+        return;
+      }
+
+      doc.setFontSize(16);
+      doc.text("Royalties & Earnings", 70, 20);
+      doc.setFontSize(12);
+
+      let startY = 30;
+      const colWidths = [50, 30, 30, 30, 30];
+
+      doc.setFont(undefined, 'bold');
+      ["File Name", "Type", "Downloads", "Earnings", "Status"].forEach((text, i) => {
+        doc.text(text, 10 + colWidths.slice(0, i).reduce((a, b) => a + b, 0), startY);
+      });
+      doc.setFont(undefined, 'normal');
+
+      tableData.forEach((row, rowIndex) => {
+        const y = startY + 10 + rowIndex * 10;
+        row.forEach((text, i) => {
+          doc.text(String(text), 10 + colWidths.slice(0, i).reduce((a, b) => a + b, 0), y);
+        });
+      });
+
+      const totalEarnings = document.getElementById("totalEarnings").textContent;
+      doc.text(totalEarnings, 130, startY + 10 + tableData.length * 10 + 10);
+      doc.save("royalties_earnings.pdf");
+    };
+  </script>
+</body>
+</html>

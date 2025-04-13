@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Manage Users</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+  <style>
+    body {
+      background-color: #000000; /* black background */
+      color: #ffffff; /* white text for contrast */
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 2rem;
+    }
+
+    h2 {
+      color: #00bcd4;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      background-color: rgba(255, 255, 255, 0.1);
+      padding: 10px 20px;
+      border-radius: 10px;
+      display: inline-block;
+    }
+
+    .table {
+      background-color: rgba(255, 255, 255, 0.1);
+      border: 1px solid #555;
+      border-radius: 10px;
+      overflow: hidden;
+      color: white;
+    }
+
+    thead.table-dark {
+      background-color: #333 !important;
+      color: #ffffff;
+    }
+
+    .table tbody tr:hover {
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .btn-accent {
+      background: linear-gradient(to right, #00acc1, #26c6da);
+      color: white;
+      border: none;
+    }
+
+    .btn-accent:hover {
+      background: linear-gradient(to right, #0097a7, #00e5ff);
+    }
+
+    .btn-danger {
+      background: linear-gradient(to right, #ef5350, #e53935);
+      color: white;
+      border: none;
+    }
+
+    .btn-danger:hover {
+      background: linear-gradient(to right, #d32f2f, #ff1744);
+    }
+  </style>
+</head>
+<body>
+
+  <h2> Manage Users</h2>
+
+  <table class="table table-bordered mt-3">
+    <thead class="table-dark">
+      <tr>
+        <th>Username</th>
+        <th>Email</th>
+        <th>Role</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>user123</td>
+        <td>user123@example.com</td>
+        <td>Contributor</td>
+        <td>
+          <button class="btn btn-accent btn-sm">Promote</button>
+          <button class="btn btn-danger btn-sm">Ban</button>
+        </td>
+      </tr>
+      <tr>
+        <td>viewer42</td>
+        <td>viewer42@example.com</td>
+        <td>User</td>
+        <td>
+          <button class="btn btn-accent btn-sm">Promote</button>
+          <button class="btn btn-danger btn-sm">Ban</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+</body>
+</html>
